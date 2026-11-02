@@ -85,44 +85,56 @@ func (s *Store) updateIndexes(storer Storer, source BucketSource, key []byte, da
 }
 
 // adds or removes a specific index on an item
+// each index value is a bucket within the index bucket, with one item per record key
 func (s *Store) updateIndex(typeName, indexName string, unique bool, indexKey []byte, source BucketSource, key []byte,
 	delete bool) error {
-	indexValue := make(keyList, 0)
-
 	b, err := source.CreateBucketIfNotExists(indexBucketName(typeName, indexName))
 	if err != nil {
 		return err
 	}
 
-	iVal := b.Get(indexKey)
-	if iVal != nil {
-		if unique && !delete {
-			return ErrUniqueExists
+	keys := b.Bucket(indexKey)
+
+	if delete {
+		if keys == nil {
+			return nil
 		}
 
-		err = s.decode(iVal, &indexValue)
+		err = keys.Delete(key)
 		if err != nil {
 			return err
 		}
 
+		if k, _ := keys.Cursor().First(); k == nil {
+			return b.DeleteBucket(indexKey)
+		}
+		return nil
 	}
 
-	if delete {
-		indexValue.remove(key)
-	} else {
-		indexValue.add(key)
+	if keys != nil && unique {
+		return ErrUniqueExists
 	}
 
-	if len(indexValue) == 0 {
-		return b.Delete(indexKey)
-	}
-
-	iVal, err = s.encode(indexValue)
+	keys, err = b.CreateBucketIfNotExists(indexKey)
 	if err != nil {
 		return err
 	}
 
-	return b.Put(indexKey, iVal)
+	return keys.Put(key, nil)
+}
+
+// indexedKeys returns the record keys stored under an index value
+// NOTE: This loads every key of an index value into memory. Keeping a nested cursor in the iterator would bound memory
+// use for index values with many records.
+func indexedKeys(b *bolt.Bucket, indexKey []byte) (keyList, error) {
+	var keys keyList
+
+	// keys are copied because the iterator holds on to them while the caller can write to this transaction
+	err := b.Bucket(indexKey).ForEach(func(k, _ []byte) error {
+		keys = append(keys, append([]byte(nil), k...))
+		return nil
+	})
+	return keys, err
 }
 
 // IndexExists tests if an index exists for the passed in field name
@@ -151,18 +163,6 @@ func (v *keyList) add(key []byte) {
 	*v = append(*v, nil)
 	copy((*v)[i+1:], (*v)[i:])
 	(*v)[i] = key
-}
-
-func (v *keyList) remove(key []byte) {
-	i := sort.Search(len(*v), func(i int) bool {
-		return bytes.Compare((*v)[i], key) >= 0
-	})
-
-	if i < len(*v) {
-		copy((*v)[i:], (*v)[i+1:])
-		(*v)[len(*v)-1] = nil
-		*v = (*v)[:len(*v)-1]
-	}
 }
 
 func (v *keyList) in(key []byte) bool {
@@ -302,13 +302,13 @@ func (s *Store) newIterator(source BucketSource, typeName string, query *Query) 
 		var nKeys [][]byte
 
 		for len(nKeys) < iteratorKeyMinCacheSize {
-			var k, v []byte
+			var k []byte
 			if prepCursor {
-				// k, v = cursor.First()
-				k, v = s.seekCursor(cursor, criteria)
+				// k, _ = cursor.First()
+				k, _ = s.seekCursor(cursor, criteria)
 				prepCursor = false
 			} else {
-				k, v = cursor.Next()
+				k, _ = cursor.Next()
 			}
 			if k == nil {
 				return nKeys, nil
@@ -322,8 +322,7 @@ func (s *Store) newIterator(source BucketSource, typeName string, query *Query) 
 
 			if ok {
 				// append the slice of keys stored in the index
-				var keys = make(keyList, 0)
-				err := s.decode(v, &keys)
+				keys, err := indexedKeys(iBucket, k)
 				if err != nil {
 					return nil, err
 				}

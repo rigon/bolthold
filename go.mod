@@ -1,8 +1,7 @@
 module github.com/timshannon/bolthold
 
-go 1.16
+go 1.26.0
 
-require (
-	go.etcd.io/bbolt v1.3.8
-	golang.org/x/sys v0.15.0 // indirect
-)
+require go.etcd.io/bbolt v1.5.0
+
+require golang.org/x/sys v0.49.0 // indirect

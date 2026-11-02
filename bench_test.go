@@ -224,3 +224,41 @@ func BenchmarkFindIndexed(b *testing.B) {
 		}
 	})
 }
+
+// BenchmarkIndexedInsertSharedValue inserts records that all share one index value
+func BenchmarkIndexedInsertSharedValue(b *testing.B) {
+	benchWrap(b, nil, func(store *bolthold.Store, b *testing.B) {
+		item := BenchDataIndexed{ID: 30, Category: "shared"}
+		for i := 0; i < b.N; i++ {
+			err := store.Insert(id(), item)
+			if err != nil {
+				b.Fatalf("Error inserting: %s", err)
+			}
+		}
+	})
+}
+
+// BenchmarkFindUsingIndex finds 10 of 1000 records through an index
+func BenchmarkFindUsingIndex(b *testing.B) {
+	benchWrap(b, nil, func(store *bolthold.Store, b *testing.B) {
+		for i := 0; i < 1000; i++ {
+			category := "other"
+			if i%100 == 0 {
+				category = "find"
+			}
+			err := store.Insert(id(), BenchDataIndexed{ID: 30, Category: category})
+			if err != nil {
+				b.Fatalf("Error inserting: %s", err)
+			}
+		}
+
+		b.ResetTimer()
+		for i := 0; i < b.N; i++ {
+			var result []BenchDataIndexed
+			err := store.Find(&result, bolthold.Where("Category").Eq("find").Index("Category"))
+			if err != nil {
+				b.Fatalf("Error finding: %s", err)
+			}
+		}
+	})
+}

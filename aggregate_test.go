@@ -5,7 +5,6 @@
 package bolthold_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/timshannon/bolthold"
@@ -115,7 +114,7 @@ func TestFindAggregateGroup(t *testing.T) {
 					t.Fatalf("Expected vehicle SUM of %v got %v", 19, sum)
 				}
 			default:
-				t.Fatalf(fmt.Sprintf("Unaccounted for grouping: %s", group))
+				t.Fatalf("Unaccounted for grouping: %s", group)
 			}
 		}
 
@@ -304,7 +303,7 @@ func TestFindAggregateMultipleGrouping(t *testing.T) {
 					t.Fatalf("Expected %s SUM of %v got %v", group, 10, sum)
 				}
 			default:
-				t.Fatalf(fmt.Sprintf("Unaccounted for grouping: %s", group))
+				t.Fatalf("Unaccounted for grouping: %s", group)
 
 			}
 		}

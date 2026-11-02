@@ -122,3 +122,56 @@ func TestSliceIndexWithPointers(t *testing.T) {
 		equals(t, len(es), 1)
 	})
 }
+
+type indexItem struct {
+	ID       int
+	Category string `boltholdIndex:"Category"`
+}
+
+const indexItemBucket = "_index:indexItem:Category"
+
+// indexItems returns the record keys stored on disk under the index value for category
+func indexItems(t *testing.T, store *bh.Store, category string) [][]byte {
+	indexKey, err := bh.DefaultEncode(category)
+	ok(t, err)
+
+	var keys [][]byte
+	ok(t, store.Bolt().View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(indexItemBucket)).Bucket(indexKey)
+		if bucket == nil {
+			return nil
+		}
+		return bucket.ForEach(func(k, _ []byte) error {
+			keys = append(keys, append([]byte(nil), k...))
+			return nil
+		})
+	}))
+	return keys
+}
+
+func TestIndexStoresKeysAsBucketItems(t *testing.T) {
+	testWrap(t, func(store *bh.Store, t *testing.T) {
+		ok(t, store.Insert(1, indexItem{ID: 1, Category: "a"}))
+		ok(t, store.Insert(2, indexItem{ID: 2, Category: "a"}))
+		ok(t, store.Insert(3, indexItem{ID: 3, Category: "b"}))
+
+		equals(t, len(indexItems(t, store, "a")), 2)
+		equals(t, len(indexItems(t, store, "b")), 1)
+
+		var found []indexItem
+		ok(t, store.Find(&found, bh.Where("Category").Eq("a").Index("Category")))
+		equals(t, len(found), 2)
+
+		ok(t, store.Update(2, indexItem{ID: 2, Category: "b"}))
+		equals(t, len(indexItems(t, store, "a")), 1)
+		equals(t, len(indexItems(t, store, "b")), 2)
+
+		// the last key removes the index value entirely
+		ok(t, store.Delete(1, indexItem{}))
+		equals(t, len(indexItems(t, store, "a")), 0)
+
+		found = nil
+		ok(t, store.Find(&found, bh.Where("Category").Eq("a").Index("Category")))
+		equals(t, len(found), 0)
+	})
+}
