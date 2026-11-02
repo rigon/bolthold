@@ -7,7 +7,7 @@ package bolthold_test
 import (
 	"testing"
 
-	"github.com/timshannon/bolthold"
+	"github.com/rigon/bolthold"
 )
 
 func TestFindAggregateGroup(t *testing.T) {

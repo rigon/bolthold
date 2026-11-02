@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/timshannon/bolthold"
+	"github.com/rigon/bolthold"
 	bolt "go.etcd.io/bbolt"
 )
 

@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/timshannon/bolthold"
-	bh "github.com/timshannon/bolthold"
+	"github.com/rigon/bolthold"
+	bh "github.com/rigon/bolthold"
 	bolt "go.etcd.io/bbolt"
 )
 

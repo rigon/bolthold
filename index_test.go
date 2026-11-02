@@ -7,7 +7,7 @@ package bolthold_test
 import (
 	"testing"
 
-	bh "github.com/timshannon/bolthold"
+	bh "github.com/rigon/bolthold"
 	bolt "go.etcd.io/bbolt"
 )
 

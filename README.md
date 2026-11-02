@@ -1,8 +1,8 @@
 # BoltHold
 
-[![Go](https://github.com/timshannon/bolthold/actions/workflows/go.yml/badge.svg)](https://github.com/timshannon/bolthold/actions/workflows/go.yml)[![GoDoc](https://godoc.org/github.com/timshannon/bolthold?status.svg)](https://pkg.go.dev/github.com/timshannon/bolthold) [![Coverage Status](https://coveralls.io/repos/github/timshannon/bolthold/badge.svg?branch=master)](https://coveralls.io/github/timshannon/bolthold?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/timshannon/bolthold)](https://goreportcard.com/report/github.com/timshannon/bolthold)
+[![Go](https://github.com/rigon/bolthold/actions/workflows/go.yml/badge.svg)](https://github.com/rigon/bolthold/actions/workflows/go.yml)[![GoDoc](https://godoc.org/github.com/rigon/bolthold?status.svg)](https://pkg.go.dev/github.com/rigon/bolthold) [![Coverage Status](https://coveralls.io/repos/github/rigon/bolthold/badge.svg?branch=master)](https://coveralls.io/github/rigon/bolthold?branch=master) [![Go Report Card](https://goreportcard.com/badge/github.com/rigon/bolthold)](https://goreportcard.com/report/github.com/rigon/bolthold)
 
-BoltHold is a simple querying and indexing layer on top of a Bolt DB instance. For a similar library built on [Badger](https://github.com/dgraph-io/badger) see [BadgerHold](https://github.com/timshannon/badgerhold).
+BoltHold is a simple querying and indexing layer on top of a Bolt DB instance. For a similar library built on [Badger](https://github.com/dgraph-io/badger) see [BadgerHold](https://github.com/rigon/badgerhold).
 
 The goal is to create a simple, higher level interface on top of Bolt DB that simplifies dealing with Go Types and finding data, but exposes the underlying Bolt DB for customizing as you wish. By default the encoding used is Gob, so feel free to use the GobEncoder/Decoder interface for faster serialization. Or, alternately, you can use any serialization you want by supplying encode / decode funcs to the `Options` struct on Open.
 
@@ -26,7 +26,7 @@ type Person struct {
 
 ```
 
-This means that there will be an index created for `Division` that will contain the set of unique divisions, and the main record keys they refer to. More information on how indexes work can be found [here](https://github.com/timshannon/bolthold/issues/36#issuecomment-414720348)
+This means that there will be an index created for `Division` that will contain the set of unique divisions, and the main record keys they refer to. More information on how indexes work can be found [here](https://github.com/rigon/bolthold/issues/36#issuecomment-414720348)
 
 Each index value is stored as a bucket holding one item per record key.
 
@@ -329,7 +329,7 @@ for i := range result {
 
 Aggregate queries become especially powerful when combined with the sub-querying capability of `MatchFunc`.
 
-Many more examples of queries can be found in the [find_test.go](https://github.com/timshannon/bolthold/blob/master/find_test.go) file in this repository.
+Many more examples of queries can be found in the [find_test.go](https://github.com/rigon/bolthold/blob/master/find_test.go) file in this repository.
 
 ## Comparing
 
